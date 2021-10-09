@@ -1,0 +1,251 @@
+---
+title: "Mini Data Analysis_Milestone 1"
+author: "Menghong Huang"
+date: "10/7/2021"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Choose DataSet
+
+#### 1. Initially select 4 datasets
+
+There are 7 dataset from `datateachr` package. Firstly,based on the description, I prefer to perform further exploration on the below 4 datasets because they have sufficient examples(rows > 10000 ) and variables(columns >10) for multiple analysis.
+
++ CHOICE_1_building_permits
++ CHOICE_2_parking_meters
++ CHOICE_3_steam_games
++ CHOICE_4_vancouver_trees
+
+#### 2. Exploring these 4 datasets:
+
+Load required packages:
+
+```{r}
+suppressPackageStartupMessages(library(datateachr))
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+Check the class of every dataset:
+
+```{r}
+class(building_permits)
+class(parking_meters)
+class(steam_games)
+class(vancouver_trees)
+```
+
+Have a glimpse on the 4 datasets
+
+`building_permits`
+
+- Most of variables in `building_permits` are categorical,only the "project_value" is the numerical variables
+- Address information is hard to be used in data analysis
+- Limited analysis can be performed except counting and summarizing
+```{r}
+glimpse(building_permits)
+```
+
+`parking_meters` 
+
+- Most of variables in `parking_meters` are categorical and they are well categorized,which can be used for grouping and summarizing the number of different type of parking meters
+- Only "longitude" and "latitude" are the numerical variables,which can be used to detect the geometric distribution of parking meters
+```{r}
+glimpse(parking_meters)
+```
+
+`steam_games`
+
+- `steam_games` dataset has many words-related variables which are not easy to be used
+- There are some missing values in numerial variables
+```{r}
+glimpse(steam_games)
+```
+
+`vancouver_trees`
+
+- `vancouver_trees` has clear categorical variables for summarizing and useful numerical features like "diameter" to form relationship study
+- There is no long-words variables. Thurs, most of them can be easily utilized.
+```{r}
+glimpse(vancouver_trees)
+```
+
+
+#### 3. Select 2 dataset for further exploration
+
+I'd like to choose the `parking_meters` and `vancouver_trees` for further exploring because they both have useful numerical variables to study relationship with other variables and also their categorical variables are clean and well-categorized,which can be used for grouping and summarizing.
+
+Missing values in the two datasets are not that significant. Even though some columns in `vancouver_trees` has significant data missing, most of columns with useful variables have no data missing. Thurs, the two datasets are suitable for further investigation.
+```{r}
+## % of missing values in each column in parking_meters ##
+colSums(is.na(parking_meters))/10032
+```
+
+```{r}
+## % of missing values in each column in vancouver_trees ##
+colSums(is.na(vancouver_trees))/146611
+```
+
+
+#### 4. Final decision on the dataset chosen for mini-data-analysis
+
+- For `parking_meters`, the potential research question is to find the location distribution of parking meters with lowest rate in particular time period.
+
+- For `vancouver_trees`,it would be interesting to study the relationship between diameters and height of trees in different area of Vancouver.
+
+I prefer to have the `vancouver_trees` dataset for further data exploration.
+
+
+## Exploring DataSet
+
+Exploring `vancouver_trees` dataset
+
+#### 1. Missing value detection by counting and plot
+
+- Count the number of missing values for each column. There are missing values in `cultivar_name`,`plant_area`,`date_planted`,`longitude` and `latitude`.
+```{r}
+## Overview which columns have missing values ##
+sum_NA=colSums(is.na(vancouver_trees))
+sum_NA
+```
+
+- Order by the number of missing values. `date_planted` has the most missing values.
+
+```{r}
+## Order by the number of NA to identify columns with the most missing values##
+as_tibble(c(feature = list(colnames(vancouver_trees)), as_tibble(sum_NA))) %>%
+  rename(NA_sum=value) %>%
+  mutate(nonNA_sum=146611-NA_sum)%>%
+  arrange(desc(NA_sum))
+```
+- Over half of data are missing in `date_planted` based on the plot below. Thurs, this columns may cannot be used for statistics and may influence the performance of data exploration.
+```{r}
+## plot the number of non-NA values and missing values ##
+vancouver_trees[, colSums(is.na(vancouver_trees)) != 0] %>%
+  mutate(across(everything(),~is.na(.))) %>%
+  pivot_longer(cols = everything(), 
+               names_to  = "Features", 
+               values_to = "is_NA") %>%
+  ggplot(aes(is_NA)) +
+  geom_bar(aes(y=..prop..,group=1)) +
+  facet_wrap(~ Features)+
+  theme_minimal()
+```
+
+
+#### 2. Find the most popular genuses of Vancouver trees and their average diameter and height.
+
+- **ACER** and **PRUNUS** are much more popular in Vancouver among others,almost 5 times than the third one.
+- Their heights mainly in range 2 and diameters are above 10.
+- I'll focus on the two genuses of trees to do further study.
+
+```{r}
+vancouver_trees %>%
+  group_by(genus_name)%>%
+  summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n())%>%
+  arrange(desc(n))
+```
+
+
+#### 3. The distributions of diameters for each height range for **ACER** and **PRUNUS** 
+
+Use boxplot, jitter plot and density plot to observe the distributions by each height range
+
+**Boxplot**
+
+- Generally, trees with higher height have greater diameters both in **ACER** and **PRUNUS** ; **PRUNUS** donnot show this trend after height 6,which is caused by much less data in these height range.
+
+```{r}
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS")) %>%
+  ggplot(aes(genus_name,diameter,colour=factor(height_range_id)))+
+  geom_boxplot(alpha=0.1)+
+  scale_y_log10()+
+  theme_minimal()
+```
+
+**Jitter plot**
+
+- The trees plant after year 2000 mainly have the height in range 1 and diameter below 10. the older trees planted before 2000 have larger diameters and height.
+
+- **PRUNUS** has fewer trees with height > 6 while **ACER** still has some data distributed in large height range. 
+
+```{r}
+## ACER diameter distribution against different height range##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  ggplot(aes(factor(height_range_id),diameter,colour=date_planted<"2000-01-01"))+
+  geom_jitter(alpha=0.1)+
+  scale_y_log10()+
+  facet_grid(genus_name ~ .)+
+  xlab("Height Range Id")+
+  theme_minimal()
+```
+
+**Density_ridges**
+
+- The density plots have long tails where diameters are much larger than most of points.That means there are some thick trees with outstanding diameters while they are not centralized to particular diameter range. I'm going to further discuss these outstanding trees and understand why they are thicker than others for same genus(may related to planted locations or their ages).
+
+```{r}
+## diameter density distribution of "ACER" and "PRUNUS"##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  ggplot(aes(diameter,factor(height_range_id)))+
+  ggridges::geom_density_ridges()+
+  facet_wrap(~ genus_name)+
+  ylab("Height Range Id")+
+  theme_minimal()
+```
+
+#### 4. Find the distributions of trees with larger diameter and try to understand the reasons causing them thicker
+
+- plot the geographical location of trees with outstanding diameter(diameters > quantil 0.8)
+- It seems that thick trees of ACER are tend to locate in specific area, especially in the west coast. However, PRUNUS has more uniform distribution.
+```{r}
+## show the distribution of thick trees in geographical location ##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  group_by(genus_name)%>%
+  mutate(thick_tree=diameter>quantile(diameter,probs=0.8)) %>%
+  filter(thick_tree==TRUE) %>%
+  ggplot(aes(longitude,latitude,colour=genus_name))+
+  geom_point(alpha=0.1)
+```
+
+
+To further exploring the linkage between thick trees and geographical location, identify the `neighbourhood_name` with the most thick trees(diameters>qualtil 0.8) 
+
+- Thick ACER trees are mostly distribute in **KITSILANO**, **DUNBAR-SOUTHLANDS** and **SHAUGHNESSY**.
+- PRUNUS with large diameters do not cluster in particular neighbourhood though **KENSINGTON-CEDAR COTTAGE** has the most thick PRUNUS.
+
+```{r}
+## identify the neighbourhood_name with the most thick trees##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  group_by(genus_name)%>%
+  filter(diameter>quantile(diameter,probs=0.8)) %>%
+  group_by(genus_name,neighbourhood_name)  %>%
+  summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n(),.groups = "drop") %>%
+  arrange(genus_name,desc(n))
+```
+
+
+## Research Questions
+
++ What is the relationship between the age of trees with `diameter` or `height_range_id`. I plan to calculate the ages based on the `date_planted` and the date today. 
++ Exploring the distributions of trees with larger Height (greater than the median of `height_range_id`) in different planted locations.
++ What's the major genuses of trees, height range and diameter range for different `plant_area`?
++ How the street characteristics (like `root_barrier`,`street_side_name` etc.) influence the number of trees and its diameters?
+
+
+
+
+
+
+
+
+
+
