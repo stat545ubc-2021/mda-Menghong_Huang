@@ -65,6 +65,9 @@ were. This will guide your work through milestone 2:
 
 <!-------------------------- Start your work below ---------------------------->
 
+-   The `vancouver_tree` dataset is what I choose for all the milestones
+    of my mini-data analysis project. The four research questions are:
+
 1.  *What is the relationship between the age of trees with `diameter`
     or `height_range_id`?*
 2.  *Exploring the distributions of trees with larger Height (greater
@@ -150,16 +153,16 @@ vanTrees_sub%>%
     ## # A tibble: 11 × 7
     ##    height_range_id `min(age)` `max(age)` `mean(age)` `median(age)`
     ##              <dbl>      <dbl>      <dbl>       <dbl>         <dbl>
-    ##  1               0       2.77       31.9        12.7          11.6
-    ##  2               1       2.30       31.9        12.2          11.8
-    ##  3               2       2.41       32.0        22.3          22.9
-    ##  4               3       2.70       32.0        23.5          23.8
-    ##  5               4       2.51       32.0        24.4          24.8
-    ##  6               5       2.83       31.7        24.9          25.0
-    ##  7               6       3.60       32.0        23.4          23.8
-    ##  8               7      11.1        31.7        21.4          21.5
-    ##  9               8      14.9        28.5        20.2          20.3
-    ## 10               9      15.7        25.8        20.6          21.3
+    ##  1               0       2.80       32.0        12.7          11.6
+    ##  2               1       2.32       31.9        12.2          11.8
+    ##  3               2       2.44       32.0        22.3          22.9
+    ##  4               3       2.72       32.0        23.5          23.8
+    ##  5               4       2.54       32.0        24.5          24.8
+    ##  6               5       2.86       31.8        24.9          25.0
+    ##  7               6       3.62       32.0        23.4          23.8
+    ##  8               7      11.1        31.8        21.5          21.5
+    ##  9               8      14.9        28.6        20.3          20.3
+    ## 10               9      15.7        25.9        20.6          21.3
     ## 11              10      23.8        23.8        23.8          23.8
     ## # … with 2 more variables: quantile(age, probs = 0.9) <dbl>, n <int>
 
@@ -169,12 +172,12 @@ vanTrees_sub%>%
     do that, the points are clustered around each age integer and cannot
     form a line of diameter cross age;
 
--   The first layer of below plot is the line chart of diameter cross
-    age.
-
--   The second layer is the bar chart of the tree number in each age
+-   The first layer is the bar chart of the tree number in each age
     integer and it’s represented as a background to help with
     understanding how many data used for the mean value of diameter.
+
+-   The second layer of below plot is the line chart of diameter cross
+    age.
 
 ``` r
 ## plot the relationship between age and the mean diameter of trees in same age ##
@@ -184,8 +187,8 @@ vanTrees_sub %>%
   group_by(age_r) %>%
   summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n()) %>%
   ggplot(aes(age_r,y=diam_mean)) +
+  geom_col(aes(y=n/100),position = "dodge")+
   geom_line(color="red") +
-  geom_col(aes(y=n/100),position = "dodge",alpha=0.1)+
   scale_y_continuous("mean of diameter", sec.axis = sec_axis(~. *100, name = "number of trees per age"))+
   theme(axis.title.y.right=element_text(colour="grey"),
         axis.title.y=element_text(colour="red"))

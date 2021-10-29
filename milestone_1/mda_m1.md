@@ -1,39 +1,54 @@
+Mini Data Analysis_Milestone 1
+================
+Menghong Huang
+10/7/2021
+
 ## Choose DataSet
 
 #### 1. Initially select 4 datasets
 
 There are 7 dataset from `datateachr` package. Firstly,based on the
 description, I prefer to perform further exploration on the below 4
-datasets because they have sufficient examples(rows &gt; 10000 ) and
-variables(columns &gt;10) for multiple analysis.
+datasets because they have sufficient examples(rows \> 10000 ) and
+variables(columns \>10) for multiple analysis.
 
--   CHOICE\_1\_building\_permits
--   CHOICE\_2\_parking\_meters
--   CHOICE\_3\_steam\_games
--   CHOICE\_4\_vancouver\_trees
+-   CHOICE_1\_building_permits
+-   CHOICE_2\_parking_meters
+-   CHOICE_3\_steam_games
+-   CHOICE_4\_vancouver_trees
 
 #### 2. Exploring these 4 datasets:
 
 Load required packages:
 
-    suppressPackageStartupMessages(library(datateachr))
-    suppressPackageStartupMessages(library(tidyverse))
+``` r
+suppressPackageStartupMessages(library(datateachr))
+suppressPackageStartupMessages(library(tidyverse))
+```
 
 Check the class of every dataset:
 
-    class(building_permits)
+``` r
+class(building_permits)
+```
 
     ## [1] "spec_tbl_df" "tbl_df"      "tbl"         "data.frame"
 
-    class(parking_meters)
+``` r
+class(parking_meters)
+```
 
     ## [1] "tbl_df"     "tbl"        "data.frame"
 
-    class(steam_games)
+``` r
+class(steam_games)
+```
 
     ## [1] "spec_tbl_df" "tbl_df"      "tbl"         "data.frame"
 
-    class(vancouver_trees)
+``` r
+class(vancouver_trees)
+```
 
     ## [1] "tbl_df"     "tbl"        "data.frame"
 
@@ -42,13 +57,13 @@ Have a glimpse on the 4 datasets
 `building_permits`
 
 -   Most of variables in `building_permits` are categorical,only the
-    “project\_value” is the numerical variables
+    “project_value” is the numerical variables
 -   Address information is hard to be used in data analysis
 -   Limited analysis can be performed except counting and summarizing
 
-<!-- -->
-
-    glimpse(building_permits)
+``` r
+glimpse(building_permits)
+```
 
     ## Rows: 20,680
     ## Columns: 14
@@ -75,9 +90,9 @@ Have a glimpse on the 4 datasets
 -   Only “longitude” and “latitude” are the numerical variables,which
     can be used to detect the geometric distribution of parking meters
 
-<!-- -->
-
-    glimpse(parking_meters)
+``` r
+glimpse(parking_meters)
+```
 
     ## Rows: 10,032
     ## Columns: 22
@@ -110,9 +125,9 @@ Have a glimpse on the 4 datasets
     easy to be used
 -   There are some missing values in numerial variables
 
-<!-- -->
-
-    glimpse(steam_games)
+``` r
+glimpse(steam_games)
+```
 
     ## Rows: 40,833
     ## Columns: 21
@@ -146,9 +161,9 @@ Have a glimpse on the 4 datasets
 -   There is no long-words variables. Thurs, most of them can be easily
     utilized.
 
-<!-- -->
-
-    glimpse(vancouver_trees)
+``` r
+glimpse(vancouver_trees)
+```
 
     ## Rows: 146,611
     ## Columns: 20
@@ -186,8 +201,10 @@ some columns in `vancouver_trees` has significant data missing, most of
 columns with useful variables have no data missing. Thurs, the two
 datasets are suitable for further investigation.
 
-    ## % of missing values in each column in parking_meters ##
-    colSums(is.na(parking_meters))/10032
+``` r
+## % of missing values in each column in parking_meters ##
+colSums(is.na(parking_meters))/10032
+```
 
     ##     meter_head     r_mf_9a_6p     r_mf_6p_10     r_sa_9a_6p     r_sa_6p_10 
     ##   0.0000000000   0.0019936204   0.0019936204   0.0022926635   0.0019936204 
@@ -200,8 +217,10 @@ datasets are suitable for further investigation.
     ## geo_local_area       meter_id 
     ##   0.0000000000   0.0000000000
 
-    ## % of missing values in each column in vancouver_trees ##
-    colSums(is.na(vancouver_trees))/146611
+``` r
+## % of missing values in each column in vancouver_trees ##
+colSums(is.na(vancouver_trees))/146611
+```
 
     ##            tree_id       civic_number         std_street         genus_name 
     ##         0.00000000         0.00000000         0.00000000         0.00000000 
@@ -238,11 +257,11 @@ Exploring `vancouver_trees` dataset
     `cultivar_name`,`plant_area`,`date_planted`,`longitude` and
     `latitude`.
 
-<!-- -->
-
-    ## Overview which columns have missing values ##
-    sum_NA=colSums(is.na(vancouver_trees))
-    sum_NA
+``` r
+## Overview which columns have missing values ##
+sum_NA=colSums(is.na(vancouver_trees))
+sum_NA
+```
 
     ##            tree_id       civic_number         std_street         genus_name 
     ##                  0                  0                  0                  0 
@@ -258,13 +277,13 @@ Exploring `vancouver_trees` dataset
 -   Order by the number of missing values. `date_planted` has the most
     missing values.
 
-<!-- -->
-
-    ## Order by the number of NA to identify columns with the most missing values##
-    as_tibble(c(feature = list(colnames(vancouver_trees)), as_tibble(sum_NA))) %>%
-      rename(NA_sum=value) %>%
-      mutate(nonNA_sum=146611-NA_sum)%>%
-      arrange(desc(NA_sum))
+``` r
+## Order by the number of NA to identify columns with the most missing values##
+as_tibble(c(feature = list(colnames(vancouver_trees)), as_tibble(sum_NA))) %>%
+  rename(NA_sum=value) %>%
+  mutate(nonNA_sum=146611-NA_sum)%>%
+  arrange(desc(NA_sum))
+```
 
     ## # A tibble: 20 × 3
     ##    feature            NA_sum nonNA_sum
@@ -294,20 +313,20 @@ Exploring `vancouver_trees` dataset
     below. Thurs, this columns may cannot be used for statistics and may
     influence the performance of data exploration.
 
-<!-- -->
+``` r
+## plot the number of non-NA values and missing values ##
+vancouver_trees[, colSums(is.na(vancouver_trees)) != 0] %>%
+  mutate(across(everything(),~is.na(.))) %>%
+  pivot_longer(cols = everything(), 
+               names_to  = "Features", 
+               values_to = "is_NA") %>%
+  ggplot(aes(is_NA)) +
+  geom_bar(aes(y=..prop..,group=1)) +
+  facet_wrap(~ Features)+
+  theme_minimal()
+```
 
-    ## plot the number of non-NA values and missing values ##
-    vancouver_trees[, colSums(is.na(vancouver_trees)) != 0] %>%
-      mutate(across(everything(),~is.na(.))) %>%
-      pivot_longer(cols = everything(), 
-                   names_to  = "Features", 
-                   values_to = "is_NA") %>%
-      ggplot(aes(is_NA)) +
-      geom_bar(aes(y=..prop..,group=1)) +
-      facet_wrap(~ Features)+
-      theme_minimal()
-
-![](mda_m1_files/figure-markdown_strict/unnamed-chunk-11-1.png)
+![](mda_m1_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 #### 2. Find the most popular genuses of Vancouver trees and their average diameter and height.
 
@@ -316,12 +335,12 @@ Exploring `vancouver_trees` dataset
 -   Their heights mainly in range 2 and diameters are above 10.
 -   I’ll focus on the two genuses of trees to do further study.
 
-<!-- -->
-
-    vancouver_trees %>%
-      group_by(genus_name)%>%
-      summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n())%>%
-      arrange(desc(n))
+``` r
+vancouver_trees %>%
+  group_by(genus_name)%>%
+  summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n())%>%
+  arrange(desc(n))
+```
 
     ## # A tibble: 97 × 4
     ##    genus_name diam_mean height_med     n
@@ -349,20 +368,20 @@ by each height range
     **ACER** and **PRUNUS** ; **PRUNUS** donnot show this trend after
     height 6,which is caused by much less data in these height range.
 
-<!-- -->
-
-    vancouver_trees %>%
-      filter(genus_name %in% c("ACER","PRUNUS")) %>%
-      ggplot(aes(genus_name,diameter,colour=factor(height_range_id)))+
-      geom_boxplot(alpha=0.1)+
-      scale_y_log10()+
-      theme_minimal()
+``` r
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS")) %>%
+  ggplot(aes(genus_name,diameter,colour=factor(height_range_id)))+
+  geom_boxplot(alpha=0.1)+
+  scale_y_log10()+
+  theme_minimal()
+```
 
     ## Warning: Transformation introduced infinite values in continuous y-axis
 
     ## Warning: Removed 35 rows containing non-finite values (stat_boxplot).
 
-![](mda_m1_files/figure-markdown_strict/unnamed-chunk-13-1.png)
+![](mda_m1_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 **Jitter plot**
 
@@ -373,25 +392,25 @@ by each height range
 -   **PRUNUS** has fewer trees with height > 6 while **ACER** still has
     some data distributed in large height range.
 
-<!-- -->
-
-    ## ACER diameter distribution against different height range##
-    vancouver_trees %>%
-      filter(genus_name %in% c("ACER","PRUNUS"))%>%
-      ggplot(aes(factor(height_range_id),diameter,colour=date_planted<"2000-01-01"))+
-      geom_jitter(alpha=0.1)+
-      scale_y_log10()+
-      facet_grid(genus_name ~ .)+
-      xlab("Height Range Id")+
-      theme_minimal()
+``` r
+## ACER diameter distribution against different height range##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  ggplot(aes(factor(height_range_id),diameter,colour=date_planted<"2000-01-01"))+
+  geom_jitter(alpha=0.1)+
+  scale_y_log10()+
+  facet_grid(genus_name ~ .)+
+  xlab("Height Range Id")+
+  theme_minimal()
+```
 
     ## Warning: Transformation introduced infinite values in continuous y-axis
 
     ## Warning: Removed 35 rows containing missing values (geom_point).
 
-![](mda_m1_files/figure-markdown_strict/unnamed-chunk-14-1.png)
+![](mda_m1_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
-**Density\_ridges**
+**Density_ridges**
 
 -   The density plots have long tails where diameters are much larger
     than most of points.That means there are some thick trees with
@@ -400,22 +419,22 @@ by each height range
     and understand why they are thicker than others for same genus(may
     related to planted locations or their ages).
 
-<!-- -->
-
-    ## diameter density distribution of "ACER" and "PRUNUS"##
-    vancouver_trees %>%
-      filter(genus_name %in% c("ACER","PRUNUS"))%>%
-      ggplot(aes(diameter,factor(height_range_id)))+
-      ggridges::geom_density_ridges()+
-      facet_wrap(~ genus_name)+
-      ylab("Height Range Id")+
-      theme_minimal()
+``` r
+## diameter density distribution of "ACER" and "PRUNUS"##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  ggplot(aes(diameter,factor(height_range_id)))+
+  ggridges::geom_density_ridges()+
+  facet_wrap(~ genus_name)+
+  ylab("Height Range Id")+
+  theme_minimal()
+```
 
     ## Picking joint bandwidth of 1.41
 
     ## Picking joint bandwidth of 2.73
 
-![](mda_m1_files/figure-markdown_strict/unnamed-chunk-15-1.png)
+![](mda_m1_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 #### 4. Find the distributions of trees with larger diameter and try to understand the reasons causing them thicker
 
@@ -425,20 +444,20 @@ by each height range
     area, especially in the west coast. However, PRUNUS has more uniform
     distribution.
 
-<!-- -->
-
-    ## show the distribution of thick trees in geographical location ##
-    vancouver_trees %>%
-      filter(genus_name %in% c("ACER","PRUNUS"))%>%
-      group_by(genus_name)%>%
-      mutate(thick_tree=diameter>quantile(diameter,probs=0.8)) %>%
-      filter(thick_tree==TRUE) %>%
-      ggplot(aes(longitude,latitude,colour=genus_name))+
-      geom_point(alpha=0.1)
+``` r
+## show the distribution of thick trees in geographical location ##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  group_by(genus_name)%>%
+  mutate(thick_tree=diameter>quantile(diameter,probs=0.8)) %>%
+  filter(thick_tree==TRUE) %>%
+  ggplot(aes(longitude,latitude,colour=genus_name))+
+  geom_point(alpha=0.1)
+```
 
     ## Warning: Removed 992 rows containing missing values (geom_point).
 
-![](mda_m1_files/figure-markdown_strict/unnamed-chunk-16-1.png)
+![](mda_m1_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 To further exploring the linkage between thick trees and geographical
 location, identify the `neighbourhood_name` with the most thick
@@ -450,16 +469,16 @@ trees(diameters>qualtil 0.8)
     neighbourhood though **KENSINGTON-CEDAR COTTAGE** has the most thick
     PRUNUS.
 
-<!-- -->
-
-    ## identify the neighbourhood_name with the most thick trees##
-    vancouver_trees %>%
-      filter(genus_name %in% c("ACER","PRUNUS"))%>%
-      group_by(genus_name)%>%
-      filter(diameter>quantile(diameter,probs=0.8)) %>%
-      group_by(genus_name,neighbourhood_name)  %>%
-      summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n(),.groups = "drop") %>%
-      arrange(genus_name,desc(n))
+``` r
+## identify the neighbourhood_name with the most thick trees##
+vancouver_trees %>%
+  filter(genus_name %in% c("ACER","PRUNUS"))%>%
+  group_by(genus_name)%>%
+  filter(diameter>quantile(diameter,probs=0.8)) %>%
+  group_by(genus_name,neighbourhood_name)  %>%
+  summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n(),.groups = "drop") %>%
+  arrange(genus_name,desc(n))
+```
 
     ## # A tibble: 44 × 5
     ##    genus_name neighbourhood_name       diam_mean height_med     n
