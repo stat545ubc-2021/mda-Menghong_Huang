@@ -42,6 +42,9 @@ From milestone 1, you should have an idea of the basic structure of your dataset
 First, write out the 4 research questions you defined in milestone 1 were. This will guide your work through milestone 2:
 
 <!-------------------------- Start your work below ---------------------------->
+
+- The `vancouver_tree` dataset is what I choose for all the milestones of my mini-data analysis project. The four research questions are:
+
 1. *What is the relationship between the age of trees with `diameter` or `height_range_id`?*
 2. *Exploring the distributions of trees with larger Height (greater than the median of `height_range_id`) in different planted locations.*
 3. *What's the major genuses of trees, height range and diameter range for different `plant_area`?*
@@ -95,9 +98,9 @@ vanTrees_sub%>%
 
 - To identify the trend between age and diameter, I initially calculate the mean of diameter for each age integer since the diameter of trees almost don't changed a lot within one year. If not do that, the points are clustered around each age integer and cannot form a line of diameter cross age;
 
-- The first layer of below plot is the line chart of diameter cross age.
+- The first layer is the bar chart of the tree number in each age integer and it's represented as a background to help with understanding how many data used for the mean value of diameter.
 
-- The second layer is the bar chart of the tree number in each age integer and it's represented as a background to help with understanding how many data used for the mean value of diameter.
+- The second layer of below plot is the line chart of diameter cross age.
 
 ```{r}
 ## plot the relationship between age and the mean diameter of trees in same age ##
@@ -107,8 +110,8 @@ vanTrees_sub %>%
   group_by(age_r) %>%
   summarise(diam_mean=mean(diameter),height_med=median(height_range_id),n=n()) %>%
   ggplot(aes(age_r,y=diam_mean)) +
+  geom_col(aes(y=n/100),position = "dodge")+
   geom_line(color="red") +
-  geom_col(aes(y=n/100),position = "dodge",alpha=0.1)+
   scale_y_continuous("mean of diameter", sec.axis = sec_axis(~. *100, name = "number of trees per age"))+
   theme(axis.title.y.right=element_text(colour="grey"),
         axis.title.y=element_text(colour="red"))
